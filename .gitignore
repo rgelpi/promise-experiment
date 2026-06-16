@@ -20,6 +20,7 @@
 /docs/instructions/
 /docs/sync-pairing-guide.md
 /analyses/
+notes.md
 
 # debug
 npm-debug.log*
