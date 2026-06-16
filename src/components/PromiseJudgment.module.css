@@ -1,0 +1,25 @@
+.wrapper { display: flex; flex-direction: column; gap: var(--space-6); }
+.counter { font-size: var(--text-sm); color: var(--color-text-muted); }
+
+.messageBox {
+  background: var(--color-surface-subtle);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-accent);
+  border-radius: var(--radius-sm);
+  padding: var(--space-4) var(--space-5);
+}
+.messageLabel {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-2);
+}
+.message { margin: 0; line-height: var(--leading-relaxed); }
+
+.field { display: flex; flex-direction: column; gap: var(--space-2); }
+
+.judgmentLabel { font-weight: var(--weight-medium); margin-bottom: var(--space-1); }
+
+.judgmentButtons { display: flex; gap: var(--space-3); }

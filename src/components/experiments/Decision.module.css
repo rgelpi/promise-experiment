@@ -1,0 +1,82 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-8);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.title {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  margin-bottom: var(--space-2);
+}
+
+.description {
+  font-size: var(--text-base);
+  color: var(--color-text-primary);
+}
+
+.buttonGroup {
+  display: flex;
+  gap: var(--space-4);
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: var(--space-4) 0;
+}
+
+/* ── PublicGoodsDecision: live payoff preview ─────────────────────────────── */
+
+.preview {
+  background: var(--color-surface-elevated, #f8f9fa);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm, 6px);
+  padding: var(--space-4);
+}
+
+.previewTitle {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-secondary, #666);
+  margin-bottom: var(--space-3);
+}
+
+.previewTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+
+.previewTable td {
+  padding: var(--space-1) var(--space-2);
+  vertical-align: top;
+}
+
+.previewTable td:first-child {
+  color: var(--color-text-secondary, #666);
+  width: 65%;
+}
+
+.previewTable td:last-child {
+  text-align: right;
+}
+
+.previewTotal td {
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-2);
+  margin-top: var(--space-2);
+  font-weight: var(--weight-semibold);
+}
+
+.previewNote {
+  font-size: var(--text-xs, 0.75rem);
+  color: var(--color-text-secondary, #888);
+  margin-top: var(--space-3);
+  font-style: italic;
+}
