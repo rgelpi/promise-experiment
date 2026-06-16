@@ -38,14 +38,14 @@ export default function TrustDecision({ role, onSubmit }: TrustDecisionProps) {
       ) : (
         <>
           <p className={styles.description}>
-            Person A chose IN (sent their points to you). You can choose to ROLL the die or DON'T ROLL.
+            Person A chose IN (sent their points to you). You can choose to ROLL the die or DON&apos;T ROLL.
           </p>
           <div className={styles.buttonGroup}>
             <button
               className={`btn ${decision === "DONT_ROLL" ? "btn-primary" : "btn-secondary"}`}
               onClick={() => setDecision("DONT_ROLL")}
             >
-              DON'T ROLL (Keep all points)
+              DON&apos;T ROLL (Keep all points)
             </button>
             <button
               className={`btn ${decision === "ROLL" ? "btn-primary" : "btn-secondary"}`}

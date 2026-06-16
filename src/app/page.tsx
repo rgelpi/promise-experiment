@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   parseProlificParams,
@@ -28,7 +28,7 @@ function LandingContent() {
   const [sessionId, setSessionId] = useState("");
 
   // Core launch function
-  async function launch(slug: ExperimentSlug, role: ParticipantRole, prolific: ProlificParams) {
+  const launch = useCallback(async (slug: ExperimentSlug, role: ParticipantRole, prolific: ProlificParams) => {
     setStatus("launching");
     try {
       const res = await fetch("/api/session", {
@@ -54,7 +54,7 @@ function LandingContent() {
       setErrorMsg("There was a problem starting the study. Please try refreshing, or contact the research team.");
       setStatus("error");
     }
-  }
+  }, [router]);
 
   // Effect to load initial parameters and either auto-launch (production) or show portal (development)
   useEffect(() => {
@@ -99,7 +99,7 @@ function LandingContent() {
     }
 
     init();
-  }, [router, searchParams]);
+  }, [router, searchParams, launch]);
 
   // Keep selectedRole valid when selectedExperiment changes
   useEffect(() => {

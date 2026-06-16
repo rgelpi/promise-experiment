@@ -1,5 +1,5 @@
-import { initializeApp, getApps, getApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore/lite";
+import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
+import { getFirestore, type Firestore } from "firebase/firestore/lite";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -11,8 +11,8 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase singleton (safe for hot reload in dev)
-let app: any = null;
-let dbInstance: any = null;
+let app: FirebaseApp | Record<string, never> | null = null;
+let dbInstance: Firestore | Record<string, never> | null = null;
 
 if (process.env.NEXT_PUBLIC_DISABLE_FIREBASE !== "true") {
   app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);

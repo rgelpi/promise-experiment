@@ -838,28 +838,8 @@ You will be shown **15–25 proposed contribution rates**. If your evaluation **
 Each bonus point is worth $0.20. You could earn up to $3–$5 in bonus payments on top of your guaranteed participation fee.`),
 };
 
-const placeholderAttentionCheck: AttentionCheckConfig = {
-  preamble:
-    "Please answer the following questions to ensure that you understand the task. " +
-    "You will have two chances to get each question right.",
-  questions: [
-    {
-      id: "placeholder-q1",
-      text: "[Placeholder] Comprehension question 1 — to be filled in.",
-      type: "multiple-choice",
-      options: ["Option A", "Option B", "Option C"],
-      correctAnswer: "0",
-      maxAttempts: 2,
-    },
-  ],
-};
 
-const placeholderInstructions: InstructionPage[] = [
-  {
-    content:
-      "# Instructions\n\n[Placeholder instructions — to be filled in for this experiment and role.]\n\nThank you for participating in this study. Please read the instructions below carefully before proceeding.",
-  },
-];
+
 
 // ── Experiment Registry ───────────────────────────────────────────────────────
 

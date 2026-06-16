@@ -19,7 +19,7 @@ export interface DummyOutcome {
  */
 export function getDummyPartnerOutcome(
   experiment: ExperimentSlug,
-  ownDecision: any,
+  ownDecision: Record<string, unknown> | null | undefined,
   endowment: number
 ): DummyOutcome {
   switch (experiment) {

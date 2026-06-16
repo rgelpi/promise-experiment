@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
       judgmentType: JudgmentType;
       reasonFor?: string;
       reasonAgainst?: string;
-      judgment: number; // e.g. 1-7 scale or boolean
+      judgment: boolean;
     };
 
     if (!sessionId || !targetResponseId || judgment === undefined) {

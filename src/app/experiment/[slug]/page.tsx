@@ -6,7 +6,7 @@ import { ExperimentProvider } from "@/context/ExperimentContext";
 import Layout from "@/components/Layout";
 import ExperimentRunner from "@/components/ExperimentRunner";
 import { getExperimentConfig } from "@/lib/experiments";
-import type { ExperimentSlug, ParticipantRole, Session } from "@/lib/types";
+import type { ExperimentSlug, ParticipantRole, Session, ExperimentConfig } from "@/lib/types";
 
 function ExperimentContent({ slug }: { slug: string }) {
   const searchParams = useSearchParams();
@@ -81,7 +81,7 @@ function ExperimentContent({ slug }: { slug: string }) {
   );
 }
 
-function ExperimentPageWrapper({ config }: { config: any }) {
+function ExperimentPageWrapper({ config }: { config: ExperimentConfig }) {
   // We need to access context here to get the current step for the progress bar
   // Since we are inside the provider, we could create a custom hook or just render it.
   // We will just let Layout know the step if we want to show progress.

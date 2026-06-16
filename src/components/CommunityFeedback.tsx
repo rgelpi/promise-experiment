@@ -30,7 +30,6 @@ export default function CommunityFeedback({
     );
   }
 
-  const pct = Math.round(assessment.positiveRatio * 100);
   const majority = assessment.positiveRatio >= 0.5;
 
   return (

@@ -109,7 +109,7 @@ export async function PATCH(req: NextRequest) {
       currentStep?: string;
       pairedWith?: string;
       responseStep?: string;
-      responseData?: any;
+      responseData?: unknown;
       surveyAnswers?: Record<string, string | number>;
     };
 

@@ -6,14 +6,32 @@ import { getExperimentConfig } from "@/lib/experiments";
 import { getDummyPartnerOutcome } from "@/lib/dummyStrategies";
 import styles from "./TrialOutcome.module.css";
 
+interface TrialOutcomeData {
+  ownChoiceText: string;
+  partnerChoiceText?: string;
+  payoffText: string;
+  pointsEarned: number | null;
+}
+
+interface PartnerResponse {
+  stepName: string;
+  data: Record<string, unknown>;
+}
+
+interface PartnerData {
+  paired: boolean;
+  partnerSessionId: string;
+  partnerResponses: PartnerResponse[];
+}
+
 interface TrialOutcomeProps {
-  onSubmit: (data: any) => void;
+  onSubmit: (data: TrialOutcomeData) => void;
 }
 
 export default function TrialOutcome({ onSubmit }: TrialOutcomeProps) {
   const { session, experimentSlug, role, responses, saveResponse } = useExperiment();
   const [loading, setLoading] = useState(true);
-  const [outcome, setOutcome] = useState<any>(null);
+  const [outcome, setOutcome] = useState<TrialOutcomeData | null>(null);
 
   const config = getExperimentConfig(experimentSlug!);
 
@@ -67,7 +85,7 @@ export default function TrialOutcome({ onSubmit }: TrialOutcomeProps) {
       }
 
       // Check if we already have a saved outcome in the state
-      const savedOutcome = responses["trial-outcome"] as any;
+      const savedOutcome = responses["trial-outcome"] as TrialOutcomeData | undefined;
       if (savedOutcome) {
         setOutcome(savedOutcome);
         setLoading(false);
@@ -100,21 +118,21 @@ export default function TrialOutcome({ onSubmit }: TrialOutcomeProps) {
     loadAndCompute();
   }, [session, experimentSlug, role, responses, saveResponse]);
 
-  function computeOutcome(pData: any) {
+  function computeOutcome(pData: PartnerData | null): TrialOutcomeData | null {
     if (!experimentSlug || !role) return null;
 
     const ownOfferRes = responses["revised-offer"] || responses["initial-offer"];
     
-    const getPartnerOffer = () => {
-      const pResponses = pData?.partnerResponses || [];
-      const res = pResponses.find((r: any) => r.stepName === "revised-offer") || pResponses.find((r: any) => r.stepName === "initial-offer");
+    const getPartnerOffer = (): Record<string, unknown> | undefined => {
+      const pResponses: PartnerResponse[] = pData?.partnerResponses || [];
+      const res = pResponses.find((r) => r.stepName === "revised-offer") || pResponses.find((r) => r.stepName === "initial-offer");
       return res?.data;
     };
 
     switch (experimentSlug) {
       case "trust-game": {
         if (role === "A") {
-          const decision = (responses["initial-offer"] as any)?.decision || "OUT";
+          const decision = (responses["initial-offer"] as Record<string, unknown>)?.decision as string || "OUT";
           if (decision === "OUT") {
             return {
               ownChoiceText: "You chose to keep your 7 points (OUT).",
@@ -123,7 +141,7 @@ export default function TrialOutcome({ onSubmit }: TrialOutcomeProps) {
               pointsEarned: config.endowment,
             };
           } else {
-            const dummy = getDummyPartnerOutcome("trust-game", responses["initial-offer"], config.endowment);
+            const dummy = getDummyPartnerOutcome("trust-game", responses["initial-offer"] as Record<string, unknown>, config.endowment);
             let partnerText = `Person B chose: ${dummy.partnerChoiceValue === "ROLL" ? "ROLL the die" : "DON'T ROLL the die"}.`;
             if (dummy.dieRoll) {
               partnerText += ` The virtual die landed on ${dummy.dieRoll}.`;
@@ -136,7 +154,7 @@ export default function TrialOutcome({ onSubmit }: TrialOutcomeProps) {
             };
           }
         } else {
-          const decision = (responses["trustee-decision"] as any)?.decision || "DONT_ROLL";
+          const decision = (responses["trustee-decision"] as Record<string, unknown>)?.decision as string || "DONT_ROLL";
           const partnerText = "Person A chose to send you their 7 points (IN).";
           
           if (decision === "DONT_ROLL") {
@@ -162,7 +180,7 @@ export default function TrialOutcome({ onSubmit }: TrialOutcomeProps) {
       case "ultimatum-game": {
         const isDictator = config.isDictatorMode;
         if (role === "A") {
-          const offer = (ownOfferRes as any)?.offer ?? 0;
+          const offer = (ownOfferRes as Record<string, unknown>)?.offer as number ?? 0;
           if (isDictator) {
             return {
               ownChoiceText: `You proposed to keep ${config.endowment - offer} points and offer ${offer} points to Person B.`,
@@ -171,7 +189,7 @@ export default function TrialOutcome({ onSubmit }: TrialOutcomeProps) {
               pointsEarned: config.endowment - offer,
             };
           } else {
-            const dummy = getDummyPartnerOutcome("ultimatum-game", ownOfferRes, config.endowment);
+            const dummy = getDummyPartnerOutcome("ultimatum-game", ownOfferRes as Record<string, unknown>, config.endowment);
             const accepted = dummy.partnerChoiceValue === "ACCEPT";
             return {
               ownChoiceText: `You proposed to keep ${config.endowment - offer} points and offer ${offer} points to Person B.`,
@@ -184,7 +202,7 @@ export default function TrialOutcome({ onSubmit }: TrialOutcomeProps) {
           }
         } else {
           const pOfferData = getPartnerOffer();
-          const offer = pOfferData?.offer ?? 0;
+          const offer = (pOfferData?.offer as number) ?? 0;
           const partnerText = `Person A proposed to offer you ${offer} points (keeping ${config.endowment - offer} points).`;
           
           if (isDictator) {
@@ -195,7 +213,7 @@ export default function TrialOutcome({ onSubmit }: TrialOutcomeProps) {
               pointsEarned: offer,
             };
           } else {
-            const accepted = (responses["ultimatum-accept-reject"] as any)?.accepted;
+            const accepted = (responses["ultimatum-accept-reject"] as Record<string, unknown>)?.accepted as boolean;
             return {
               ownChoiceText: `You chose to ${accepted ? "ACCEPT" : "REJECT"} the proposal.`,
               partnerChoiceText: partnerText,
@@ -210,8 +228,8 @@ export default function TrialOutcome({ onSubmit }: TrialOutcomeProps) {
 
       case "power-to-take-game": {
         if (role === "A") {
-          const takeRate = (ownOfferRes as any)?.takeRate ?? 0;
-          const dummy = getDummyPartnerOutcome("power-to-take-game", ownOfferRes, config.endowment);
+          const takeRate = (ownOfferRes as Record<string, unknown>)?.takeRate as number ?? 0;
+          const dummy = getDummyPartnerOutcome("power-to-take-game", ownOfferRes as Record<string, unknown>, config.endowment);
           const destroyRate = dummy.partnerChoiceValue as number;
           
           return {
@@ -222,8 +240,8 @@ export default function TrialOutcome({ onSubmit }: TrialOutcomeProps) {
           };
         } else {
           const pTakeData = getPartnerOffer();
-          const takeRate = pTakeData?.takeRate ?? 0;
-          const destroyRate = (responses["destroy-rate"] as any)?.destroyRate ?? 0;
+          const takeRate = (pTakeData?.takeRate as number) ?? 0;
+          const destroyRate = (responses["destroy-rate"] as Record<string, unknown>)?.destroyRate as number ?? 0;
           
           const remaining = config.endowment * (1 - destroyRate / 100);
           const taken = Math.round(remaining * (takeRate / 100) * 10) / 10;
@@ -240,9 +258,9 @@ export default function TrialOutcome({ onSubmit }: TrialOutcomeProps) {
 
       case "third-party-punishment": {
         const pDictatorData = getPartnerOffer();
-        const kept = config.endowment - (pDictatorData?.offer ?? 0);
-        const offered = pDictatorData?.offer ?? 0;
-        const punishmentRate = (ownOfferRes as any)?.punishmentRate ?? 0;
+        const kept = config.endowment - ((pDictatorData?.offer as number) ?? 0);
+        const offered = (pDictatorData?.offer as number) ?? 0;
+        const punishmentRate = (ownOfferRes as Record<string, unknown>)?.punishmentRate as number ?? 0;
         
         const deducted = Math.round(kept * (punishmentRate / 100) * 10) / 10;
         const dictatorFinal = Math.round((kept - deducted) * 10) / 10;
@@ -256,7 +274,7 @@ export default function TrialOutcome({ onSubmit }: TrialOutcomeProps) {
       }
 
       case "public-goods-game": {
-        const rate = (ownOfferRes as any)?.contributionRate ?? 0;
+        const rate = (ownOfferRes as Record<string, unknown>)?.contributionRate as number ?? 0;
         const contributed = Math.round((rate / 100) * config.endowment * 10) / 10;
         return {
           ownChoiceText: `You chose a contribution rate of ${rate}% (${contributed} points).`,
@@ -288,7 +306,7 @@ export default function TrialOutcome({ onSubmit }: TrialOutcomeProps) {
   }
 
   const hasPayoff = outcome.pointsEarned !== null;
-  const bonusUsd = hasPayoff ? (outcome.pointsEarned * config.pointsToUsd).toFixed(2) : null;
+  const bonusUsd = outcome.pointsEarned !== null ? (outcome.pointsEarned * config.pointsToUsd).toFixed(2) : null;
 
   return (
     <div>
@@ -305,7 +323,7 @@ export default function TrialOutcome({ onSubmit }: TrialOutcomeProps) {
 
         {outcome.partnerChoiceText && (
           <div className={styles.summaryItem}>
-            <span className={styles.summaryLabel}>Partner's Decision</span>
+            <span className={styles.summaryLabel}>Partner&apos;s Decision</span>
             <span className={styles.summaryValue}>{outcome.partnerChoiceText}</span>
           </div>
         )}

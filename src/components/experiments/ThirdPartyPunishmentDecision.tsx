@@ -5,7 +5,7 @@ import styles from "./Decision.module.css";
 
 interface ThirdPartyPunishmentDecisionProps {
   dictatorDivision: { kept: number; given: number };
-  onSubmit: (decision: any) => void;
+  onSubmit: (decision: { punishmentRate: number }) => void;
 }
 
 export default function ThirdPartyPunishmentDecision({
@@ -22,7 +22,7 @@ export default function ThirdPartyPunishmentDecision({
         <strong>Receiver gets:</strong> {dictatorDivision.given} points
         <br /><br />
         As a third-party observer, you may assign a punishment rate.
-        This rate determines what percentage of the Dictator's points will be deducted.
+        This rate determines what percentage of the Dictator&apos;s points will be deducted.
       </p>
       <RateSlider
         label="Punishment Rate"

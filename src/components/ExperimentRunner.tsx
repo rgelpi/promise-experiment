@@ -25,6 +25,24 @@ import { getProlificCompletionUrl, IS_DEV } from "@/lib/prolific";
 import { PLACEHOLDER_SURVEY } from "@/lib/survey";
 import type { CommunityAssessment } from "@/lib/types";
 
+interface PartnerResponse {
+  stepName: string;
+  data: Record<string, unknown>;
+}
+
+interface PartnerData {
+  paired: boolean;
+  partnerSessionId: string;
+  partnerResponses: PartnerResponse[];
+}
+
+interface CommunityItem {
+  id: string;
+  message?: string;
+  offer?: number;
+  contributionRate?: number;
+}
+
 export default function ExperimentRunner() {
   const {
     session,
@@ -33,14 +51,19 @@ export default function ExperimentRunner() {
     currentStep,
     goNext,
     saveResponse,
-    responses,
   } = useExperiment();
 
   const [loading, setLoading] = useState(false);
-  const [partnerData, setPartnerData] = useState<any>(null);
-  const [communityItems, setCommunityItems] = useState<any[]>([]);
+  const [partnerData, setPartnerData] = useState<PartnerData | null>(null);
+  const [communityItems, setCommunityItems] = useState<CommunityItem[]>([]);
   const [communityIndex, setCommunityIndex] = useState(0);
   const [devFeedback, setDevFeedback] = useState<CommunityAssessment | null>(null);
+
+  const needsPartnerData =
+    currentStep === "view-message" ||
+    currentStep === "make-decision" ||
+    currentStep === "outcome" ||
+    (currentStep === "make-offer" && experimentSlug === "third-party-punishment");
 
   // Generate random community feedback when entering the feedback step in development mode
   useEffect(() => {
@@ -70,34 +93,6 @@ export default function ExperimentRunner() {
     }
     updateSessionStep();
   }, [currentStep, session]);
-
-  if (!experimentSlug || !role || !session) return null;
-
-  const config = getExperimentConfig(experimentSlug);
-  const roleConfig = config.roles.find((r) => r.role === role);
-
-  async function handleResponse(stepName: string, data: any) {
-    setLoading(true);
-    await fetch("/api/session", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        sessionId: session!.id,
-        currentStep, // Keep progress in sync
-        responseStep: stepName,
-        responseData: data,
-      }),
-    });
-    saveResponse(stepName, data);
-    setLoading(false);
-    goNext();
-  }
-
-  const needsPartnerData =
-    currentStep === "view-message" ||
-    currentStep === "make-decision" ||
-    currentStep === "outcome" ||
-    (currentStep === "make-offer" && experimentSlug === "third-party-punishment");
 
   useEffect(() => {
     if (needsPartnerData && !partnerData && session) {
@@ -145,6 +140,28 @@ export default function ExperimentRunner() {
     }
   }, [needsPartnerData, partnerData, session, experimentSlug, role]);
 
+  if (!experimentSlug || !role || !session) return null;
+
+  const config = getExperimentConfig(experimentSlug);
+  const roleConfig = config.roles.find((r) => r.role === role);
+
+  async function handleResponse(stepName: string, data: unknown) {
+    setLoading(true);
+    await fetch("/api/session", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sessionId: session!.id,
+        currentStep, // Keep progress in sync
+        responseStep: stepName,
+        responseData: data,
+      }),
+    });
+    saveResponse(stepName, data);
+    setLoading(false);
+    goNext();
+  }
+
   switch (currentStep) {
     case "consent":
       return (
@@ -184,16 +201,16 @@ export default function ExperimentRunner() {
         />
       );
 
-    case "view-message":
+    case "view-message": {
       // B needs to see A's message (or A sees B's depending on game).
       // We must fetch partner data first.
       if (!partnerData) {
-        return <p>Loading partner's message...</p>;
+        return <p>Loading partner&apos;s message...</p>;
       }
       
       const partnerResponses = partnerData.partnerResponses || [];
-      const msgRes = partnerResponses.find((r: any) => r.stepName === "message-composed");
-      const message = msgRes?.data?.message || "No message provided.";
+      const msgRes = partnerResponses.find((r: PartnerResponse) => r.stepName === "message-composed");
+      const message = (msgRes?.data?.message as string) || "No message provided.";
 
       return (
         <div>
@@ -203,6 +220,7 @@ export default function ExperimentRunner() {
           </button>
         </div>
       );
+    }
 
     case "make-offer":
       if (experimentSlug === "trust-game") {
@@ -219,9 +237,9 @@ export default function ExperimentRunner() {
         if (!partnerData) {
           return <p>Loading dictator division...</p>;
         }
-        const offerRes = partnerData.partnerResponses.find((r: any) => r.stepName === "initial-offer" || r.stepName === "revised-offer");
-        const dictatorKept = config.endowment - (offerRes?.data?.offer || 0);
-        const given = offerRes?.data?.offer || 0;
+        const offerRes = partnerData.partnerResponses.find((r: PartnerResponse) => r.stepName === "initial-offer" || r.stepName === "revised-offer");
+        const dictatorKept = config.endowment - ((offerRes?.data?.offer as number) || 0);
+        const given = (offerRes?.data?.offer as number) || 0;
         return <ThirdPartyPunishmentDecision dictatorDivision={{ kept: dictatorKept, given }} onSubmit={(dec) => handleResponse("initial-offer", dec)} />;
       }
       if (experimentSlug === "public-goods-game") {
@@ -235,7 +253,7 @@ export default function ExperimentRunner() {
       }
       return null;
 
-    case "view-community-feedback":
+    case "view-community-feedback": {
       // Fetch community judgment for the current response.
       // This happens after make-offer, so we need the ID of the offer response.
       // For a real async platform, we might just show an empty/no feedback yet if no judgements.
@@ -246,6 +264,7 @@ export default function ExperimentRunner() {
         experimentSlug === "public-goods-game" ? "appropriate" :
         "fair";
       return <CommunityFeedback assessment={feedback} judgmentLabel={label} onContinue={goNext} />;
+    }
 
     case "revise-offer":
       // Re-use make-offer UI but save as revised-offer
@@ -269,28 +288,29 @@ export default function ExperimentRunner() {
       }
       return null;
 
-    case "make-decision":
+    case "make-decision": {
       if (!partnerData) {
-        return <p>Loading partner's proposal...</p>;
+        return <p>Loading partner&apos;s proposal...</p>;
       }
       
       const pResponses = partnerData.partnerResponses || [];
-      const pOfferRes = pResponses.find((r: any) => r.stepName === "revised-offer") || pResponses.find((r: any) => r.stepName === "initial-offer");
+      const pOfferRes = pResponses.find((r: PartnerResponse) => r.stepName === "revised-offer") || pResponses.find((r: PartnerResponse) => r.stepName === "initial-offer");
       
       if (experimentSlug === "trust-game") {
         return <TrustDecision role={role as "A" | "B"} onSubmit={(dec) => handleResponse("trustee-decision", { decision: dec })} />;
       }
       if (experimentSlug === "ultimatum-game") {
-        const offer = pOfferRes?.data?.offer || 0;
+        const offer = (pOfferRes?.data?.offer as number) || 0;
         return <UltimatumDecision role={role as "A" | "B"} endowment={config.endowment} isDictatorMode={config.isDictatorMode} proposerOffer={offer} onSubmit={(dec) => handleResponse("ultimatum-accept-reject", dec)} />;
       }
       if (experimentSlug === "power-to-take-game") {
-        const takeRate = pOfferRes?.data?.takeRate || 0;
+        const takeRate = (pOfferRes?.data?.takeRate as number) || 0;
         return <PowerToTakeDecision role={role as "A" | "B"} proposerTakeRate={takeRate} onSubmit={(dec) => handleResponse("destroy-rate", dec)} />;
       }
       return null;
+    }
 
-    case "judge-messages":
+    case "judge-messages": {
       // Group C loops through multiple items.
       // In a real app, fetch 15-25 items from backend. Here we mock for demonstration,
       // but we should fetch from an API in a real implementation.
@@ -301,7 +321,7 @@ export default function ExperimentRunner() {
       }
 
       const item = communityItems[communityIndex];
-      const handleJudgment = async (result: any) => {
+      const handleJudgment = async (result: Record<string, unknown>) => {
         // save judgment
         await fetch("/api/community", {
           method: "POST",
@@ -325,7 +345,7 @@ export default function ExperimentRunner() {
       if (experimentSlug === "trust-game" || experimentSlug === "ultimatum-game") {
         return (
           <PromiseJudgment
-            message={item.message}
+            message={item.message ?? ""}
             itemIndex={communityIndex}
             totalItems={communityItems.length}
             onSubmit={handleJudgment}
@@ -347,6 +367,7 @@ export default function ExperimentRunner() {
           />
         );
       }
+    }
 
     case "outcome":
       return (

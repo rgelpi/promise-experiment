@@ -89,7 +89,7 @@ export type Session = {
   pairedWith?: string; // Session ID of the paired participant
   createdAt: Date;
   updatedAt: Date;
-  responses?: Record<string, any>;
+  responses?: Record<string, unknown>;
   survey?: Record<string, string | number>;
 };
 
@@ -133,9 +133,9 @@ export type CommunityJudgment = {
   targetResponseId: string; // the Group A/B response being judged
   judgmentType: JudgmentType;
   /** Free-text reasoning FOR the judgment (e.g., "This is a promise because...") */
-  reasonFor: string;
+  reasonFor?: string;
   /** Free-text reasoning AGAINST the judgment */
-  reasonAgainst: string;
+  reasonAgainst?: string;
   /** Final binary judgment */
   judgment: boolean;
   createdAt: Date;

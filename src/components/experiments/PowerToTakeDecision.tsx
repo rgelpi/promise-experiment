@@ -6,7 +6,7 @@ import styles from "./Decision.module.css";
 interface PowerToTakeDecisionProps {
   role: "A" | "B";
   proposerTakeRate?: number; // Needed for B
-  onSubmit: (decision: any) => void;
+  onSubmit: (decision: { takeRate: number } | { destroyRate: number }) => void;
 }
 
 export default function PowerToTakeDecision({
@@ -19,7 +19,7 @@ export default function PowerToTakeDecision({
       <div className={styles.wrapper}>
         <h2 className={styles.title}>Your Proposal</h2>
         <p className={styles.description}>
-          Set a "take rate" to determine the percentage of Person B's endowment you will claim.
+          Set a &quot;take rate&quot; to determine the percentage of Person B&apos;s endowment you will claim.
         </p>
         <RateSlider
           label="Take Rate"

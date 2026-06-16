@@ -9,7 +9,7 @@ interface UltimatumDecisionProps {
   endowment: number;
   isDictatorMode: boolean;
   proposerOffer?: number; // Needed for B
-  onSubmit: (decision: any) => void;
+  onSubmit: (decision: { offer: number } | { accepted: boolean; forced?: boolean }) => void;
 }
 
 export default function UltimatumDecision({
