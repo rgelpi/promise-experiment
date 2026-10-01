@@ -273,6 +273,14 @@ const powerToTakeAttentionChecks: Record<string, AttentionCheckConfig> = {
         options: ["0-10%", "0-50%", "0-100%"],
         correctAnswer: "2",
         maxAttempts: 2,
+      },
+      {
+        id: "ptt-a-q2",
+        text: "If Person B decides to destroy 50% of their endowment, what happens to your take rate?",
+        type: "multiple-choice",
+        options: ["You can keep 100% of your endowment", "You can keep 50% of your endowment", "You can keep 0% of your endowment"],
+        correctAnswer: "1",
+        maxAttempts: 2,
       }
     ]
   },

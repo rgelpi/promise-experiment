@@ -21,6 +21,7 @@
 /docs/sync-pairing-guide.md
 /analyses/
 notes.md
+*.pdf
 
 # debug
 npm-debug.log*
